@@ -9,30 +9,38 @@ import PlaceDetails from "./components/PlaceDetails/PlaceDetails";
 import { getPlacesData } from "./api";
 
 const App = () => {
-
-  const [places, setPlaces] = useState([])
-  const [coordinates, setCoordinates] = useState()
-  const [bounds, setBounds] = useState("")
-  const [childClicked, setChildClicked] = useState(null)
-  const [isLoading, setIsLoading] = useState(false)
-  
-
-
-  useEffect(()=>{
-    navigator.geolocation.getCurrentPosition(({coords: {latitude, longitude } })=>{
-      setCoordinates({lat:latitude, lng:longitude })
-    })
-  },[])
+  const [places, setPlaces] = useState([]);
+  const [filteredPlaces, setfilteredPlaces] = useState([])
+  const [coordinates, setCoordinates] = useState();
+  const [bounds, setBounds] = useState("");
+  const [childClicked, setChildClicked] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [type, setType] = useState("restaurants");
+  const [rating, setRating] = useState("");
 
   useEffect(() => {
-    setIsLoading(true)
-    getPlacesData(bounds.sw, bounds.ne)
-    
-    .then((data)=>{
-      setPlaces(data)
-      setIsLoading(false)
-    })
-  }, [coordinates, bounds]);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords: { latitude, longitude } }) => {
+        setCoordinates({ lat: latitude, lng: longitude });
+      }
+    );
+  }, []);
+
+  useEffect(() => {
+    const filteredPlaces = places.filter((place) => place.rating>rating)
+
+    setfilteredPlaces(filteredPlaces)
+  }, [rating])
+  
+
+  useEffect(() => {
+    setIsLoading(true);
+    getPlacesData(bounds.sw, bounds.ne, type).then((data) => {
+      setPlaces(data);
+      setfilteredPlaces([])
+      setIsLoading(false);
+    });
+  }, [coordinates, bounds, type]);
 
   return (
     <>
@@ -40,17 +48,23 @@ const App = () => {
       <Header />
       <Grid container spacing={3} style={{ width: "100%" }}>
         <Grid item xs={12} md={4}>
-          <List places={places}
-          childClicked={childClicked}
-          isLoading={isLoading} />
+          <List
+            places={filteredPlaces.length ? filteredPlaces : places}
+            childClicked={childClicked}
+            isLoading={isLoading}
+            type={type}
+            setType={setType}
+            rating={rating}
+            setRating={setRating}
+          />
         </Grid>
         <Grid item xs={12} md={8}>
           <Map
-          setCoordinates = {setCoordinates}
-          setBounds = {setBounds}
-          coordinates = {coordinates}
-          places={places}
-          setChildClicked={setChildClicked}
+            setCoordinates={setCoordinates}
+            setBounds={setBounds}
+            coordinates={coordinates}
+            places={filteredPlaces.length ? filteredPlaces : places}
+            setChildClicked={setChildClicked}
           />
         </Grid>
       </Grid>
