@@ -10,9 +10,9 @@ import { getPlacesData } from "./api";
 
 const App = () => {
   const [places, setPlaces] = useState([]);
-  const [filteredPlaces, setfilteredPlaces] = useState([])
+  const [filteredPlaces, setfilteredPlaces] = useState([]);
   const [coordinates, setCoordinates] = useState();
-  const [bounds, setBounds] = useState("");
+  const [bounds, setBounds] = useState({});
   const [childClicked, setChildClicked] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [type, setType] = useState("restaurants");
@@ -27,25 +27,26 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const filteredPlaces = places.filter((place) => place.rating>rating)
+    const filteredPlaces = places.filter((place) => place.rating > rating);
 
-    setfilteredPlaces(filteredPlaces)
-  }, [rating])
-  
+    setfilteredPlaces(filteredPlaces);
+  }, [rating]);
 
   useEffect(() => {
-    setIsLoading(true);
-    getPlacesData(bounds.sw, bounds.ne, type).then((data) => {
-      setPlaces(data);
-      setfilteredPlaces([])
-      setIsLoading(false);
-    });
-  }, [coordinates, bounds, type]);
+    if (bounds.sw && bounds.ne) {
+      setIsLoading(true);
+      getPlacesData(bounds.sw, bounds.ne, type).then((data) => {
+        setPlaces(data?.filter((place) => place.name && place.num_reviews > 0));
+        setfilteredPlaces([]);
+        setIsLoading(false);
+      });
+    }
+  }, [bounds, type]);
 
   return (
     <>
       <CssBaseline />
-      <Header />
+      <Header setCoordinates={setCoordinates} />
       <Grid container spacing={3} style={{ width: "100%" }}>
         <Grid item xs={12} md={4}>
           <List
